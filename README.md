@@ -16,6 +16,7 @@ It uses the Panda3D game engine under the hood, so it has no limitations.
 | Vertex color           | :heavy_check_mark: |    multi     |
 | Vertex normal          | :heavy_check_mark: |              |
 | Cameras                | :heavy_check_mark: |              |
+| Object hierarchy       | :heavy_check_mark: |              |
 
 
 ## Installation
