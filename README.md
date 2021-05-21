@@ -12,8 +12,8 @@ It uses the Panda3D game engine under the hood, so it has no limitations.
 | Description            |      Exporting     |     Note     |
 |------------------------|:------------------:|:------------:|
 | Meshes                 | :heavy_check_mark: |              |
-| Texture Coordinates(UV)| :heavy_check_mark: |    Multi     |
-| Vertex color           | :heavy_check_mark: |    Multi     |
+| Texture Coordinates(UV)| :heavy_check_mark: |    multi     |
+| Vertex color           | :heavy_check_mark: |    multi     |
 | Vertex normal          | :heavy_check_mark: |              |
 | Cameras                | :heavy_check_mark: |              |
 
