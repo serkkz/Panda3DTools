@@ -6,6 +6,12 @@
 Tools for working with the Panda3D engine in the Blender modeling package.
 It uses the Panda3D game engine under the hood, so it has no limitations.
 
+It has three export modes:
+
+1. Object-based, configure, and save to a bam file.
+2. Scene-based, configure, and save to a bam file.
+3. Select-based, configure, and save to a bam file.
+
 <!-- ![Image alt](https://github.com/serkkz/res/blob/master/diagram.png)-->
 
 ## Supported exporting
