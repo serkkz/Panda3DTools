@@ -23,6 +23,7 @@ It has three export modes:
 | Vertex normal          | :heavy_check_mark: |              |
 | Cameras                | :heavy_check_mark: |              |
 | Object hierarchy       | :heavy_check_mark: |              |
+| Collisions             | :heavy_check_mark: |              |
 
 
 ## Installation
