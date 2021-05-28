@@ -277,7 +277,7 @@ def check_coplanar(obj, poly):
 
     v1 = obj.data.vertices[poly.vertices[1]].co - obj.data.vertices[poly.vertices[0]].co
     v2 = obj.data.vertices[poly.vertices[2]].co - obj.data.vertices[poly.vertices[0]].co
-    
+
     for index in poly.vertices[3:]:
         if abs(distance_point_to_plane(obj.data.vertices[index].co, obj.data.vertices[poly.vertices[0]].co, v1.cross(v2))) < 1e-6:
             return True
@@ -298,11 +298,10 @@ def get_coplanar(obj):
         if not check_coplanar(obj, poly):
             not_coplanar.append(poly)
 
-    '''for i in obj.data.vertices:
+    for i in obj.data.vertices:
         i.select=False
         if i.co.x > 0:
-            i.select = True'''
-
+            i.select = True
     for i in obj.data.edges:
         i.select=False
     for i in obj.data.polygons:
@@ -311,60 +310,232 @@ def get_coplanar(obj):
     #for f in coplanar: print(f.index)
     for poly in not_coplanar: 
         poly.select = True
-        
+
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_mode(type="FACE")
 
+
+def triangle_poly(poly, obj):
+
+    trangle = {}
+
+    triangulator3 = Triangulator3()
+
+    index_tr = 0
+    
+    for index in poly.vertices:
+        triangulator3.add_polygon_vertex(index_tr)
+        triangulator3.add_vertex(*obj.data.vertices[index].co)
+        
+        index_tr += 1
+
+    triangulator3.triangulate()
+
+    for i in range(triangulator3.getNumTriangles()):
+        v0 = triangulator3.get_vertex(triangulator3.get_triangle_v0(i))
+        v1 = triangulator3.get_vertex(triangulator3.get_triangle_v1(i))
+        v2 = triangulator3.get_vertex(triangulator3.get_triangle_v2(i))
+
+        #collision_node.add_solid(CollisionPolygon((v0[0], v0[1], v0[2]), (v1[0], v1[1], v1[2]), (v2[0], v2[1], v2[2])))
+
+        trangle[i] = ((v0[0], v0[1], v0[2]), (v1[0], v1[1], v1[2]), (v2[0], v2[1], v2[2]))
+
+    return trangle
+
+def add_polygons_to_dict(dict_named, poly, obj):
+    # Если нет такого ключа в словаре.
+    if not obj.data.materials[poly.material_index].name in dict_named:
+        # Дабавляем ключ и список.
+        dict_named[obj.data.materials[poly.material_index].name] = [poly]
+    else:
+        # Если есть такой ключ, добавляем к списку.
+        dict_named[obj.data.materials[poly.material_index].name].append(poly)
+
 def collision_polygon_create(obj, scene):
 
-    auto_coplanar = []
+    named_triangles = {}
+    named_coplanar = {}
+    named_not_coplanar = {}
+    named_not_quad = {}
+
+    triangles = []
     coplanar = []
     not_coplanar = []
-    trangle = []
+    not_quad = []
 
-    # Перебираем полигоны объекта.
+    # Перебираем полигоны объекта чтоб извлечь полигоны.
     for poly in obj.data.polygons:
-        # Если вершины три, значит полигон автоматически компланарен.
-        if len(poly.vertices) == 3:
-            for index in poly.vertices[2:]:
-                auto_coplanar.append(poly)
+    
+        # Если есть материал.
+        if len(obj.data.materials) >> 0:
 
-        # Если у полигона четыре вершины, необходимо проверить на компланарность.
-        elif len(poly.vertices) == 4:
+            mat = True
 
-            if check_coplanar(obj, poly):
-                coplanar.append(poly)
-            else:
-                not_coplanar.append(poly)
+            # Если полигон из трех вершин, проверка на компланарность не нужна.
+            if len(poly.vertices) == 3:
+                for index in poly.vertices[2:]:
+                    add_polygons_to_dict(named_triangles, poly, obj)
 
-        # Если сторон больше чем четыре, значит нужно разбить на треугольники.
-        # Это временное решение, в будущем нужно расмотреть по мере возможности конвертацию в полигоны.
-        elif len(poly.vertices) >= 4:
-            trangle.append(poly)
+            # Если у полигона четыре вершины, необходимо проверить на компланарность.
+            elif len(poly.vertices) == 4:
+                # Если полигон компланарный
+                if check_coplanar(obj, poly):
+                    add_polygons_to_dict(named_coplanar, poly, obj)
+                else:
+                    add_polygons_to_dict(named_not_coplanar, poly, obj)
 
-    collision_node = CollisionNode(obj.name)
+            # Если у полигона более четырех вершин, необходимо разбить на треугольники.
+            elif len(poly.vertices) >= 4:
+                add_polygons_to_dict(named_not_quad, poly, obj)
 
-    vertext_quad = []
+        # Если нет материала.
+        else:
 
-    # Создаем полигон.
-    for poly in coplanar:
-        for index in poly.vertices:
-            vertext_quad.append(Point3(*obj.data.vertices[index].co))
-        quad = CollisionPolygon(vertext_quad[0], vertext_quad[1], vertext_quad[2], vertext_quad[3])
-        collision_node.add_solid(quad)
+            mat = False
+
+            # Если полигон из трех вершин, проверка на компланарность не нужна.
+            if len(poly.vertices) == 3:
+                for index in poly.vertices[2:]:
+                    triangles.append(poly)
+
+            # Если у полигона четыре вершины, необходимо проверить на компланарность.
+            elif len(poly.vertices) == 4:
+                if check_coplanar(obj, poly):
+                    coplanar.append(poly)
+                else:
+                    not_coplanar.append(poly)
+
+            # Если у полигона более четырех вершин, необходимо разбить на треугольники.
+            elif len(poly.vertices) >= 4:
+                not_quad.append(poly)
+
+
+    # Если есть материал.
+    if mat:
+
+        group = NodePath(obj.name)
+
+        collision_node_dict = {}
+
+        # Создаем полигоны столкновения из треугольников.
+        for name in named_triangles:
+            # Создаем CollisionNode
+            collision_node = CollisionNode(name)
+            for poly in named_triangles[name]:
+                vertext_quad = []
+                for index in poly.vertices:
+                    vertext_quad.append(Point3(*obj.data.vertices[index].co))
+                quad = CollisionPolygon(vertext_quad[0], vertext_quad[1], vertext_quad[2])
+                collision_node.add_solid(quad)
+                vertext_quad = []
+
+            collision_node_dict[name] = collision_node
+
+
+        # Создаем полигоны столкновения из треугольников.
+        for name in named_coplanar:
+
+            # Создаем CollisionNode
+            collision_node = CollisionNode(name)
+            
+            for poly in named_coplanar[name]:
+                vertext_quad = []
+                for index in poly.vertices:
+                    vertext_quad.append(Point3(*obj.data.vertices[index].co))
+
+                quad = CollisionPolygon(vertext_quad[0], vertext_quad[1], vertext_quad[2], vertext_quad[3])
+
+                if name in collision_node_dict:
+                    collision_node_dict[name].add_solid(quad)
+                else:
+                    collision_node.add_solid(quad)
+                    collision_node_dict[name] = collision_node
+
+                vertext_quad = []
+
+        #print(collision_node_dict)
+
+
+                
+        # Создаем полигоны столкновения из треугольников.
+        for name in named_not_coplanar:
+        
+            # Создаем CollisionNode
+            collision_node = CollisionNode(name)
+
+            # Нужно разбить некомпланарные полигоны, на треугольники.
+            for poly in named_not_coplanar[name]:
+                for vertext in triangle_poly(poly, obj).values():
+                    quad = CollisionPolygon(vertext[0], vertext[1], vertext[2])
+
+                    if name in collision_node_dict:
+                        collision_node_dict[name].add_solid(quad)
+                    else:
+                        collision_node.add_solid(quad)
+                        collision_node_dict[name] = collision_node
+
+
+        # Создаем полигоны столкновения из треугольников.
+        for name in named_not_quad:
+        
+            # Создаем CollisionNode
+            collision_node = CollisionNode(name)
+
+            # Нужно разбить некомпланарные полигоны, на треугольники.
+            for poly in named_not_quad[name]:
+                for vertext in triangle_poly(poly, obj).values():
+                    quad = CollisionPolygon(vertext[0], vertext[1], vertext[2])
+
+                    if name in collision_node_dict:
+                        collision_node_dict[name].add_solid(quad)
+                    else:
+                        collision_node.add_solid(quad)
+                        collision_node_dict[name] = collision_node
+
+
+        for col in collision_node_dict.values():
+            node_path = NodePath(col)
+            node_path.reparentTo(group)
+            node_path.show()
+
+
+        return group
+
+    # Если нет материала.
+    else:
+
+        collision_node = CollisionNode(obj.name)
+
         vertext_quad = []
 
-    for poly in auto_coplanar:
-        for index in poly.vertices:
-            vertext_quad.append(Point3(*obj.data.vertices[index].co))
-        quad = CollisionPolygon(vertext_quad[0], vertext_quad[1], vertext_quad[2])
-        collision_node.add_solid(quad)
-        vertext_quad = []
+        # Создаем полигоны столкновения из четырех угольников.
+        for poly in coplanar:
+            for index in poly.vertices:
+                vertext_quad.append(Point3(*obj.data.vertices[index].co))
+            quad = CollisionPolygon(vertext_quad[0], vertext_quad[1], vertext_quad[2], vertext_quad[3])
+            collision_node.add_solid(quad)
+            vertext_quad = []
 
-    node_path = NodePath(collision_node)
-    node_path.show()
+        # Создаем полигоны столкновения из треугольников.
+        for poly in triangles:
+            for index in poly.vertices:
+                vertext_quad.append(Point3(*obj.data.vertices[index].co))
+            quad = CollisionPolygon(vertext_quad[0], vertext_quad[1], vertext_quad[2])
+            collision_node.add_solid(quad)
+            vertext_quad = []
 
-    return node_path
+        # Нужно разбить некомпланарные полигоны, на треугольники.
+        for poly in not_coplanar:
+            triangle_poly(collision_node, poly, obj)
+
+        # Нужно разбить полигоны у которых более четырех сторон на треугольники.
+        for poly in not_quad:
+            triangle_poly(collision_node, poly, obj)
+
+        node_path = NodePath(collision_node)
+        node_path.show()
+
+        return node_path
 
 def geom_node_create(obj, scene):
 
@@ -443,6 +614,7 @@ def build_hierarchy(obj, scene):
         if not parent:
             npp = NodePath(create_object(obj, scene))
             npp.setName(obj.name)
+            #npp.show()
             npp.reparentTo(root)
             npp.set_transform(root, conversion_transform(obj))
 
@@ -450,6 +622,7 @@ def build_hierarchy(obj, scene):
             # Если нет родителя.
             np = NodePath(create_object(obj, scene))
             np.setName(obj.name)
+            #np.show()
             np.set_transform(conversion_transform(obj))
 
             # Проверяем есть ли такой объект в иерархии.
