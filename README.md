@@ -8,8 +8,8 @@ It uses the Panda3D game engine under the hood, so it has no limitations.
 
 It has three export modes:
 
-1. Object, configure, and save to a bam file.
-2. Scene, configure, and save the entire scene to a bam file.
+1. Scene, configure, and save the entire scene to a bam file.
+2. Object, configure, and save to a bam file.
 3. Select, configure,  and save the desired objects to a bam file.
 
 <!-- ![Image alt](https://github.com/serkkz/res/blob/master/diagram.png)-->
