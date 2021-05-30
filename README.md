@@ -26,5 +26,5 @@ It has three export modes:
 | Collisions             | :heavy_check_mark: |              |
 
 
-## Installation
-https://github.com/serkkz/Panda3DTools/wiki/Installation
+## Wiki
+[Wiki](https://github.com/serkkz/Panda3DTools/wiki)
