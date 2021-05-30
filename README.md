@@ -1,6 +1,9 @@
 # Panda3DTools 0.1
-
 ### Bam exporter for blender 2.8 - 3.0
+
+## Disclaimer
+
+This is not related to the official tools for Panda3D.
 
 ## Concept
 Tools for working with the Panda3D engine in the Blender modeling package.
