@@ -552,7 +552,7 @@ def collision_polygon_create(obj, scene):
         if obj.hatcher.visibility_collision_polygons:
             node_path.show()
 
-    return group
+    return group.node().getChild(0)
 
 def geom_node_create(obj, scene):
 
