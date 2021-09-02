@@ -15,6 +15,9 @@ It has three export modes:
 2. Object, configure, and save to a bam file.
 3. Select, configure,  and save the desired objects to a bam file.
 
+Before installing, read the section:
+[Installation](https://github.com/serkkz/Panda3DTools/wiki/Installation)
+
 <!-- ![Image alt](https://github.com/serkkz/res/blob/master/diagram.png)-->
 
 ## Supported exporting
